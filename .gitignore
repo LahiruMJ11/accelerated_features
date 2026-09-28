@@ -151,6 +151,15 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+datasets/
+
+# Local workspace and presentation build files
+.DS_Store
+.idea/
+tmp/
+presentation/.build/
+presentation/output/
+research paper.pdf
 
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can

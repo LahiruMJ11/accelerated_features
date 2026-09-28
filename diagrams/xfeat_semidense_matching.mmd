@@ -1,0 +1,43 @@
+flowchart LR
+    A[Image A] --> MA[Create two image scales]
+    B[Image B] --> MB[Create two image scales]
+
+    MA --> NA[XFeat backbone at both scales]
+    MB --> NB[XFeat backbone at both scales]
+
+    NA --> FA[Coarse 64-D descriptor maps F]
+    NA --> RA[Coarse reliability maps R]
+    NB --> FB[Coarse 64-D descriptor maps F]
+    NB --> RB[Coarse reliability maps R]
+
+    FA --> GA[One descriptor per coarse grid cell]
+    RA --> TA[Rank cells by reliability]
+    GA --> TA
+    FB --> GB[One descriptor per coarse grid cell]
+    RB --> TB[Rank cells by reliability]
+    GB --> TB
+
+    TA --> KA[Keep up to 10,000 reliable features]
+    TB --> KB[Keep up to 10,000 reliable features]
+
+    KA --> C[Cosine-similarity matrix]
+    KB --> C
+    C --> M[Mutual nearest-neighbor coarse matches]
+
+    M --> P[Concatenate the two matched descriptors]
+    P --> R[Learned refinement module]
+    R --> O[Predict sub-cell offset and confidence]
+    O --> Q[Discard low-confidence refinements]
+    Q --> Z[Pixel-level semi-dense correspondences]
+
+    classDef input fill:#e8f1ff,stroke:#2563eb,color:#111827;
+    classDef network fill:#f3e8ff,stroke:#7c3aed,color:#111827;
+    classDef feature fill:#ecfdf5,stroke:#059669,color:#111827;
+    classDef match fill:#fff7ed,stroke:#ea580c,color:#111827;
+    classDef output fill:#fef2f2,stroke:#dc2626,color:#111827;
+
+    class A,B,MA,MB input;
+    class NA,NB,R network;
+    class FA,RA,FB,RB,GA,GB,TA,TB,KA,KB feature;
+    class C,M,P,O,Q match;
+    class Z output;

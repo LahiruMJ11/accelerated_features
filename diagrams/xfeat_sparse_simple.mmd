@@ -1,0 +1,20 @@
+%% Slide diagram: sparse matching with XFeat.
+%% A descriptor is a short numerical description of an image location.
+%% The same extraction steps run independently on each image.
+%% Counts follow the paper's evaluation setup: limits per image, not final match counts.
+%% NMS = non-maximum suppression; MNN = mutual nearest-neighbor.
+%% Wide, shallow boxes in a vertical flow leave room for explanations beside the diagram.
+%% SVG text avoids renderer-specific HTML label width limits.
+%%{init: {"theme":"base","htmlLabels":false,"themeVariables":{"fontFamily":"Arial","fontSize":"24px","primaryTextColor":"#142735","lineColor":"#64748b"},"flowchart":{"htmlLabels":false,"curve":"linear","nodeSpacing":40,"rankSpacing":26,"padding":20,"diagramPadding":16,"wrappingWidth":460,"minNodeWidth":360}}}%%
+flowchart TB
+    A["Two images through the XFeat network"] --> B["Detect keypoints with NMS<br/>Rank by keypoint score × reliability<br/>Keep up to 4,096 per image"]
+    B --> C["Sample 64-D descriptors at keypoints"]
+    C --> D["Mutual nearest-neighbor (MNN) matching<br/>Both descriptors choose each other"]
+    D --> E["Sparse matches"]
+
+    classDef input fill:#f1f5f9,stroke:#64748b,color:#142735,stroke-width:2px;
+    classDef step fill:#e6f7f5,stroke:#168c83,color:#142735,stroke-width:2px;
+    classDef output fill:#168c83,stroke:#168c83,color:#ffffff,stroke-width:2px;
+    class A input;
+    class B,C,D step;
+    class E output;

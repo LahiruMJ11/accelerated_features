@@ -1,0 +1,48 @@
+flowchart LR
+    A[Image A] --> PA[Resize to dimensions divisible by 32]
+    B[Image B] --> PB[Resize to dimensions divisible by 32]
+
+    PA --> NA[XFeat backbone]
+    PB --> NB[XFeat backbone]
+
+    NA --> KA[Keypoint heatmap K]
+    NA --> RA[Reliability map R]
+    NA --> FA[64-D descriptor map F]
+    NB --> KB[Keypoint heatmap K]
+    NB --> RB[Reliability map R]
+    NB --> FB[64-D descriptor map F]
+
+    KA --> DA[NMS keypoint detection]
+    RA --> SA[Score = keypoint confidence x reliability]
+    DA --> SA
+    KB --> DB[NMS keypoint detection]
+    RB --> SB[Score = keypoint confidence x reliability]
+    DB --> SB
+
+    SA --> TA[Keep up to 4,096 best keypoints]
+    SB --> TB[Keep up to 4,096 best keypoints]
+
+    TA --> IA[Bicubically interpolate F at keypoints]
+    FA --> IA
+    TB --> IB[Bicubically interpolate F at keypoints]
+    FB --> IB
+
+    IA --> LA[L2-normalized 64-D descriptors]
+    IB --> LB[L2-normalized 64-D descriptors]
+
+    LA --> C[Cosine-similarity matrix]
+    LB --> C
+    C --> M[Mutual nearest-neighbor check]
+    M --> O[Accepted sparse correspondences]
+
+    classDef input fill:#e8f1ff,stroke:#2563eb,color:#111827;
+    classDef network fill:#f3e8ff,stroke:#7c3aed,color:#111827;
+    classDef feature fill:#ecfdf5,stroke:#059669,color:#111827;
+    classDef match fill:#fff7ed,stroke:#ea580c,color:#111827;
+    classDef output fill:#fef2f2,stroke:#dc2626,color:#111827;
+
+    class A,B,PA,PB input;
+    class NA,NB network;
+    class KA,RA,FA,KB,RB,FB,DA,DB,SA,SB,TA,TB,IA,IB,LA,LB feature;
+    class C,M match;
+    class O output;

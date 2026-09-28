@@ -1,0 +1,26 @@
+%% Slide diagram: one trained network, two inference modes.
+%% These are alternative matching procedures, not separately trained architectures.
+%% Semi-dense means selected reliable grid locations, not every image pixel.
+%% Feature limits follow the paper's evaluation setup and apply per image.
+%% MNN = mutual nearest-neighbor; MLP = multilayer perceptron.
+%% Two balanced columns with wider labels and generous horizontal spacing.
+%%{init: {"theme":"base","htmlLabels":false,"themeVariables":{"fontFamily":"Arial","fontSize":"24px","primaryTextColor":"#142735","lineColor":"#64748b"},"flowchart":{"htmlLabels":false,"curve":"linear","nodeSpacing":64,"rankSpacing":26,"padding":20,"diagramPadding":16,"wrappingWidth":460,"minNodeWidth":360}}}%%
+flowchart TB
+    A["Two images"] --> B["Same trained XFeat model<br/>64-D descriptors in both modes"]
+    B --> C["XFeat<br/>Up to 4,096 keypoints per image"]
+    B --> D["XFeat*: two scales of reliable coarse features<br/>Up to 10,000 descriptors per image"]
+    C --> G["Mutual nearest-neighbor (MNN) matching"]
+    D --> H["MNN matching + MLP refinement<br/>Predict offsets inside 8 × 8 cells"]
+    G --> E["Sparse matches<br/>Selected interest points"]
+    H --> F["Semi-dense matches<br/>Broader image coverage"]
+
+    classDef shared fill:#f1f5f9,stroke:#64748b,color:#142735,stroke-width:2px;
+    classDef sparse fill:#e6f7f5,stroke:#168c83,color:#142735,stroke-width:2px;
+    classDef semidense fill:#eef0ff,stroke:#6262b8,color:#142735,stroke-width:2px;
+    classDef sparseOutput fill:#168c83,stroke:#168c83,color:#ffffff,stroke-width:2px;
+    classDef semidenseOutput fill:#6262b8,stroke:#6262b8,color:#ffffff,stroke-width:2px;
+    class A,B shared;
+    class C,G sparse;
+    class D,H semidense;
+    class E sparseOutput;
+    class F semidenseOutput;
