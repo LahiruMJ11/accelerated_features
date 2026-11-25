@@ -224,24 +224,24 @@ class Trainer():
                     pts1, pts2 = positives_c[b][:, :2], positives_c[b][:, 2:]
 
                     #Grab features at corresponding idxs
-                    m1 = feats1[b, :, pts1[:,1].long(), pts1[:,0].long()].permute(1,0)
+                    m1 = feats1[b, :, pts1[:,1].long(), pts1[:,0].long()].permute(1,0)  ### descriptor at GT coarse cell, image1
                     m2 = feats2[b, :, pts2[:,1].long(), pts2[:,0].long()].permute(1,0)
 
                     #grab heatmaps at corresponding idxs
                     h1 = hmap1[b, 0, pts1[:,1].long(), pts1[:,0].long()]
                     h2 = hmap2[b, 0, pts2[:,1].long(), pts2[:,0].long()]
-                    coords1 = self.net.fine_matcher(torch.cat([m1, m2], dim=-1))
+                    coords1 = self.net.fine_matcher(torch.cat([m1, m2], dim=-1))  ##fine_matcher training
 
                     #Compute losses
-                    loss_ds, conf = dual_softmax_loss(m1, m2)
-                    loss_coords, acc_coords = coordinate_classification_loss(coords1, pts1, pts2, conf)
+                    loss_ds, conf = dual_softmax_loss(m1, m2)  ##The loss is also weighted by conf   ##descriptor loss  Eq 3
+                    loss_coords, acc_coords = coordinate_classification_loss(coords1, pts1, pts2, conf)  ##fine_matcher loss  Eq 5
 
-                    loss_kp_pos1, acc_pos1 = alike_distill_loss(kpts1[b], p1[b])
-                    loss_kp_pos2, acc_pos2 = alike_distill_loss(kpts2[b], p2[b])
-                    loss_kp_pos = (loss_kp_pos1 + loss_kp_pos2)*2.0
+                    loss_kp_pos1, acc_pos1 = alike_distill_loss(kpts1[b], p1[b])  ##keypoint distillation (image1)
+                    loss_kp_pos2, acc_pos2 = alike_distill_loss(kpts2[b], p2[b])  ##keypoint distillation (image2)
+                    loss_kp_pos = (loss_kp_pos1 + loss_kp_pos2)*2.0               ##Eq 6
                     acc_pos = (acc_pos1 + acc_pos2)/2
 
-                    loss_kp =  keypoint_loss(h1, conf) + keypoint_loss(h2, conf)
+                    loss_kp =  keypoint_loss(h1, conf) + keypoint_loss(h2, conf)  ##reliability loss  Eq 4
 
                     loss_items.append(loss_ds.unsqueeze(0))
                     loss_items.append(loss_coords.unsqueeze(0))

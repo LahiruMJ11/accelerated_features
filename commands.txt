@@ -1,0 +1,23 @@
+1. MegaDepth-1500 (paper Table 1)
+
+  python -m modules.eval.megadepth1500 --dataset-dir datasets/Mega1500 --matcher xfeat      --ransac-thr 2.5
+  python -m modules.eval.megadepth1500 --dataset-dir datasets/Mega1500 --matcher xfeat-star --ransac-thr 2.5
+
+2. ScanNet-1500 (paper Table 2)
+
+  python -m modules.eval.scannet1500 --scannet_path datasets/ScanNet1500 --output ./output/scannet_repro/ --matchers xfeat xfeat_star
+  python -m modules.eval.scannet1500 --scannet_path datasets/ScanNet1500 --output ./output/scannet_repro/ --show
+
+3. HPatches (paper Table 3)
+
+  python -m modules.eval.hpatches --dataset-dir datasets/HPatches/hpatches-sequences-release
+
+4. Aachen visual localization (paper Table 4)
+
+mv app/cache/aachen app/cache/aachen_previous
+  python -m app.loc.pipeline          # about 75 min on CPU, needs about 7.4 GB free disk
+  python -m app.cli aachen            # prints the local summary and the poses-file path
+
+Then submit the poses file (app/cache/aachen/Aachen_hloc_xfeat_netvlad50.txt) at visuallocalization.net, Once you have the percentages:
+
+  python -m app.cli aachen --set-results D1 D2 D3 N1 N2 N3

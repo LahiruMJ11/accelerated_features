@@ -289,6 +289,8 @@ class XFeat(nn.Module):
 
 		return batched_matches
 
+	##treats the 8×8 logits as a probability distribution (softmax) and computes its expected (x,y) position — a
+	##probability-weighted average over all 64 cell-center coordinates (centered around 0 via - W//2/- H//2)
 	def subpix_softmax2d(self, heatmaps, temp = 3):
 		N, H, W = heatmaps.shape
 		heatmaps = torch.softmax(temp * heatmaps.view(-1, H*W), -1).view(-1, H, W)

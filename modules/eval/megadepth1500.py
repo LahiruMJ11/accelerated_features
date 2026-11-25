@@ -20,6 +20,9 @@ import tqdm
 # Disable scientific notation
 np.set_printoptions(suppress=True)
 
+# np.trapz was removed in NumPy 2.x (renamed np.trapezoid)
+_trapz = getattr(np, 'trapezoid', None) or np.trapz
+
 class MegaDepth1500(Dataset):
     """
         Streamlined MegaDepth-1500 dataloader. The camera poses & metadata are stored in a formatted json for facilitating 
@@ -171,7 +174,7 @@ def error_auc(errors, thresholds=[5, 10, 20]):
         last_index = np.searchsorted(errors, thr)
         y = recall[:last_index] + [recall[last_index-1]]
         x = errors[:last_index] + [thr]
-        aucs.append(np.trapz(y, x) / thr)
+        aucs.append(_trapz(y, x) / thr)
 
     return {f'auc@{t}': auc for t, auc in zip(thresholds, aucs)}
 

@@ -18,6 +18,9 @@ import multiprocessing as mp
 # Disable scientific notation
 np.set_printoptions(suppress=True)
 
+# np.trapz was removed in NumPy 2.x (renamed np.trapezoid)
+_trapz = getattr(np, 'trapezoid', None) or np.trapz
+
 def intrinsics_to_camera(K):
     px, py = K[0, 2], K[1, 2]
     fx, fy = K[0, 0], K[1, 1]
@@ -105,7 +108,7 @@ def pose_auc(errors, thresholds):
         last_index = np.searchsorted(errors, t)
         r = np.r_[recall[:last_index], recall[last_index-1]]
         e = np.r_[errors[:last_index], t]
-        aucs.append(np.trapz(r, x=e)/t)
+        aucs.append(_trapz(r, x=e)/t)
     return aucs
 
 def pose_accuracy(errors, thresholds):
@@ -173,7 +176,8 @@ class Scannet1500:
         gt_poses = np.load(self.config['gt_path'])
         names = gt_poses['name']
         
-        for i in range(len(names)):
+        n_pairs = len(names) if self.config['max_pairs'] < 0 else min(self.config['max_pairs'], len(names))
+        for i in range(n_pairs):
                 scene_id = names[i, 0]
                 scene_idx = names[i, 1]
                 scene = f'scene{scene_id:04d}_{scene_idx:02d}'
@@ -336,6 +340,8 @@ def parse():
     parser.add_argument("--force", action='store_true', help="Force running the benchmark again")
     parser.add_argument("--pose_estimator", type=str, default='poselib', help="Which pose estimator to use: poselib, opencv", choices=['poselib', 'opencv'])
     
+    parser.add_argument("--matchers", type=str, nargs='+', default=['xfeat', 'xfeat_star'], choices=['xfeat', 'xfeat_star', 'alike'],
+                        help="Which matchers to evaluate (alike needs third_party/ALIKE)")
     parser.add_argument("--show", action='store_true', help="Show the matches")
     parser.add_argument("--accuracy", action='store_true', help="Show the accuracy instead of AUC")
     parser.add_argument("--filter", type=str, nargs='+', help="Filter the results by the given names")
@@ -357,11 +363,8 @@ if __name__ == "__main__":
             'n_workers': 8,
         })
 
-        functions = {
-            'xfeat': get_xfeat(),
-            'xfeat_star': get_xfeat_star(),
-            'alike': get_alike(),
-        }
+        getters = {'xfeat': get_xfeat, 'xfeat_star': get_xfeat_star, 'alike': get_alike}
+        functions = {name: getters[name]() for name in args.matchers}
 
         # save all results to a file
         all_results = {}

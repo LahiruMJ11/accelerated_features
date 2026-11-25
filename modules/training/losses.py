@@ -7,6 +7,7 @@ from modules.training import utils
 
 from third_party.alike_wrapper import extract_alike_kpts
 
+## Dual softmax loss - loss for descriptors Eq 3
 def dual_softmax_loss(X, Y, temp = 0.2):
     if X.size() != Y.size() or X.dim() != 2 or Y.dim() != 2:
         raise RuntimeError('Error: X and Y shapes must match and be 2D matrices')
@@ -167,6 +168,7 @@ def keypoint_position_loss(kpts1, kpts2, pts1, pts2, softmax_temp = 1.0):
 
     return loss, acc
 
+## loss for fine-matcher Eq 5
 def coordinate_classification_loss(coords1, pts1, pts2, conf):
     '''
         Computes the fine coordinate classification loss, by re-interpreting the 64 bins to 8x8 grid and optimizing
@@ -198,6 +200,7 @@ def coordinate_classification_loss(coords1, pts1, pts2, conf):
 
     return loss * 2., acc
 
+## loss for Reliability scores - L1 loss  Eq 4
 def keypoint_loss(heatmap, target):
     # Compute L1 loss
     L1_loss = F.l1_loss(heatmap, target)

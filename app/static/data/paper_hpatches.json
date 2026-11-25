@@ -1,0 +1,12 @@
+{
+  "title": "Homography estimation on HPatches (Table 3, Potje et al., CVPR 2024)",
+  "rows": [
+    {"m":"SiLK","cls":"Standard","i":[78.5,82.3,83.8],"v":[48.6,59.6,62.5]},
+    {"m":"SuperPoint","cls":"Standard","i":[94.6,98.5,98.8],"v":[71.1,79.6,83.9]},
+    {"m":"DISK","cls":"Standard","i":[94.6,98.8,99.6],"v":[66.4,77.5,81.8]},
+    {"m":"ORB","cls":"Fast","i":[74.6,84.6,85.4],"v":[63.2,71.4,78.6]},
+    {"m":"ZippyPoint","cls":"Fast","i":[94.2,96.9,98.5],"v":[66.1,76.8,80.7]},
+    {"m":"ALIKE","cls":"Fast","i":[94.6,98.5,99.6],"v":[68.2,77.5,81.4]},
+    {"m":"XFeat","key":"xfeat","cls":"Fast","i":[95.0,98.1,98.8],"v":[68.6,81.1,86.1]}
+  ]
+}

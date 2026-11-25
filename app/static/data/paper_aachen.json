@@ -1,0 +1,12 @@
+{
+  "title": "Visual localization on Aachen Day-Night (Table 4, Potje et al., CVPR 2024)",
+  "thresholds": ["0.25 m, 2°", "0.5 m, 5°", "5 m, 10°"],
+  "rows": [
+    {"m":"SuperPoint","cls":"Standard","day":[87.4,93.2,97.0],"night":[77.6,85.7,95.9]},
+    {"m":"DISK","cls":"Standard","day":[86.9,95.1,97.8],"night":[83.7,89.8,99.0]},
+    {"m":"ORB","cls":"Fast","day":[66.9,76.1,81.7],"night":[10.2,12.2,19.4]},
+    {"m":"ZippyPoint","cls":"Fast","day":[80.7,88.6,93.7],"night":[61.2,70.4,79.6]},
+    {"m":"ALIKE","cls":"Fast","day":[85.7,92.4,96.7],"night":[81.6,88.8,99.0]},
+    {"m":"XFeat","key":"xfeat","cls":"Fast","day":[84.7,91.5,96.5],"night":[77.6,89.8,98.0]}
+  ]
+}

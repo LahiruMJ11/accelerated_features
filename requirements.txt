@@ -3,3 +3,11 @@ poselib
 kornia==0.7.2
 tqdm
 gdown
+
+# demo UI (app/)
+fastapi
+uvicorn[standard]
+python-multipart
+# Aachen visual localization (app/loc/)
+pycolmap
+h5py

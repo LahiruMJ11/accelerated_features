@@ -75,12 +75,12 @@ class XFeatModel(nn.Module):
 										BasicLayer(64, 64, stride=1),
 										nn.Conv2d (64, 64, 1, padding=0)
 									 )
-
+		## reliability head
 		self.heatmap_head = nn.Sequential(
 										BasicLayer(64, 64, 1, padding=0),
 										BasicLayer(64, 64, 1, padding=0),
 										nn.Conv2d (64, 1, 1),
-										nn.Sigmoid()
+										nn.Sigmoid()    ## sigmoid for per-cell probability [0,1]
 									)
 
 

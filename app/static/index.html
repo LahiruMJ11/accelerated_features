@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>XFeat — Accelerated Features</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<nav class="nav" id="nav">
+  <div class="nav-inner">
+    <a class="nav-logo" href="#top">XFeat</a>
+    <div class="nav-links">
+      <a href="#overview">Overview</a>
+      <a href="#try">Try it</a>
+      <a href="#results" id="nav-results" hidden>Results</a>
+      <a href="#benchmark">Benchmark</a>
+    </div>
+    <span class="chip" id="device-chip">…</span>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="section dark hero" id="top">
+  <p class="eyebrow reveal">CVPR 2024 · Lightweight image matching</p>
+  <h1 class="reveal">XFeat.<br><span class="grad">Fast to the pixel.</span></h1>
+  <p class="lead reveal">One compact network. Two ways to match — sparse keypoints or semi-dense correspondences.
+    Upload two photos and see both, side by side.</p>
+  <div class="cta reveal">
+    <a class="btn primary" href="#try">Try it</a>
+    <a class="link" href="#benchmark">See the benchmark ›</a>
+  </div>
+</header>
+
+<!-- OVERVIEW -->
+<section class="section light" id="overview">
+  <h2 class="reveal">Same backbone.<br>Two ways to match.</h2>
+  <div class="cards">
+    <article class="card reveal">
+      <p class="eyebrow">Sparse</p>
+      <h3>XFeat</h3>
+      <p>A dedicated keypoint branch picks the top 4,096 points. Their 64-D descriptors are matched with mutual nearest neighbours.</p>
+      <dl class="stats">
+        <div><dt>27</dt><dd>FPS on CPU, VGA</dd></div>
+        <div><dt>56.4</dt><dd>AUC@10°</dd></div>
+        <div><dt>892</dt><dd>inliers</dd></div>
+      </dl>
+    </article>
+    <article class="card reveal">
+      <p class="eyebrow">Semi-dense</p>
+      <h3>XFeat<sup>*</sup></h3>
+      <p>No detector. The 10,000 most reliable coarse cells are matched at two scales, then a small MLP refines each match to the pixel.</p>
+      <dl class="stats">
+        <div><dt>19</dt><dd>FPS on CPU, VGA</dd></div>
+        <div><dt>65.4</dt><dd>AUC@10°</dd></div>
+        <div><dt>1,885</dt><dd>inliers</dd></div>
+      </dl>
+    </article>
+  </div>
+  <p class="footnote reveal">Figures from Table 1 of the paper (MegaDepth-1500). Both modes use the same checkpoint, <code>weights/xfeat.pt</code>.</p>
+</section>
+
+<!-- TRY -->
+<section class="section dark" id="try">
+  <h2 class="reveal" id="try-title">Match two photos.</h2>
+  <p class="lead small reveal" id="try-lead">Drop any pair of images — or start from a MegaDepth-1500 sample to get ground-truth pose metrics.</p>
+  <div class="seg task reveal" id="task-seg">
+    <button data-t="pose" class="on">Relative pose</button>
+    <button data-t="homography">Homography</button>
+    <button data-t="localization">Localization</button>
+  </div>
+  <div class="seg ds t-pose" id="ds-seg">
+    <button data-ds="megadepth" class="on">MegaDepth-1500</button>
+    <button data-ds="scannet">ScanNet-1500</button>
+  </div>
+
+  <div id="try-pairs">
+  <div class="drops reveal">
+    <label class="drop" id="drop0" data-k="0">
+      <input type="file" accept="image/*" hidden>
+      <div class="drop-empty"><span class="plus">+</span><span>First image</span></div>
+      <img alt="">
+    </label>
+    <label class="drop" id="drop1" data-k="1">
+      <input type="file" accept="image/*" hidden>
+      <div class="drop-empty"><span class="plus">+</span><span>Second image</span></div>
+      <img alt="">
+    </label>
+  </div>
+
+  <div class="samples reveal" id="samples-wrap" hidden>
+    <div class="samples-head">
+      <span id="samples-title">MegaDepth-1500 samples</span>
+      <button class="link-btn" id="shuffle">Shuffle</button>
+    </div>
+    <div class="samples-row" id="samples"></div>
+  </div>
+
+  <details class="adv reveal">
+    <summary>Settings</summary>
+    <div class="adv-grid">
+      <label class="t-pose">Max image size
+        <select id="opt-maxdim"><option>640</option><option>800</option><option selected>1200</option><option>1600</option></select>
+      </label>
+      <label class="t-pose">RANSAC threshold (px)
+        <input id="opt-thr" type="number" step="0.5" min="0.5" max="10" value="2.5" placeholder="auto">
+      </label>
+      <label class="t-pose">XFeat keypoints
+        <input id="opt-k1" type="number" step="256" min="256" max="20000" value="4096">
+      </label>
+      <label class="t-pose">XFeat* points
+        <input id="opt-k2" type="number" step="1000" min="1000" max="30000" value="10000">
+      </label>
+      <label class="t-hom" hidden>Shorter image side
+        <select id="oh-short"><option>320</option><option selected>480</option><option>640</option></select>
+      </label>
+      <label class="t-hom" hidden>MAGSAC++ threshold (px)
+        <input id="oh-thr" type="number" step="0.5" min="0.5" max="10" value="3">
+      </label>
+      <label class="t-hom" hidden>XFeat keypoints
+        <input id="oh-k" type="number" step="256" min="256" max="20000" value="4096">
+      </label>
+    </div>
+    <p class="footnote">Defaults follow the paper. Size applies to uploaded images; MegaDepth-1500 pairs use the benchmark's own resolution.</p>
+  </details>
+
+  <div class="cta">
+    <button class="btn primary" id="run" disabled>Match</button>
+  </div>
+  <p class="err" id="err" hidden></p>
+  </div>
+
+  <div id="try-loc" hidden>
+    <div class="seg" id="loc-split">
+      <button data-s="" class="on">All</button>
+      <button data-s="day">Day</button>
+      <button data-s="night">Night</button>
+    </div>
+    <div class="samples">
+      <div class="samples-head"><span>Aachen Day-Night queries</span><button class="link-btn" id="loc-shuffle">Shuffle</button></div>
+      <div class="samples-row" id="loc-samples"></div>
+    </div>
+    <p class="footnote" id="loc-note"></p>
+    <div class="cta"><button class="btn primary" id="loc-run" disabled>Localize</button></div>
+    <p class="err" id="loc-err" hidden></p>
+  </div>
+</section>
+
+<!-- RESULTS -->
+<section class="section dark results" id="results" hidden>
+  <h2>Results.</h2>
+  <p class="lead small" id="res-sub"></p>
+
+  <div class="toolbar">
+    <div class="seg" id="seg-show">
+      <button data-v="inl" class="on">Inliers</button>
+      <button data-v="all">All matches</button>
+    </div>
+    <label class="range">Density <input type="range" id="density" min="5" max="100" value="100"></label>
+  </div>
+
+  <figure class="viz"><div class="viz-head"><span>XFeat · sparse</span><button class="link-btn" data-save="xfeat">Save PNG</button></div><canvas id="cv-xfeat"></canvas></figure>
+  <figure class="viz"><div class="viz-head"><span>XFeat* · semi-dense</span><button class="link-btn" data-save="xfeat_star">Save PNG</button></div><canvas id="cv-xfeat_star"></canvas></figure>
+
+  <div class="table-card">
+    <h3>This pair</h3>
+    <div class="scroll"><table class="tbl" id="pair-table"></table></div>
+    <p class="footnote" id="pair-note"></p>
+  </div>
+</section>
+
+<!-- HOMOGRAPHY RESULTS -->
+<section class="section dark results" id="h-results" hidden>
+  <h2>Homography.</h2>
+  <p class="lead small" id="h-sub"></p>
+  <div class="toolbar">
+    <div class="seg" id="h-seg-show">
+      <button data-v="inl" class="on">Inliers</button>
+      <button data-v="all">All matches</button>
+    </div>
+    <label class="range">Density <input type="range" id="h-density" min="5" max="100" value="100"></label>
+  </div>
+  <figure class="viz"><div class="viz-head"><span>XFeat · sparse matches</span><button class="link-btn" id="h-save-m">Save PNG</button></div><canvas id="cv-h-match"></canvas></figure>
+  <figure class="viz"><div class="viz-head"><span>Registration · image 1 warped onto image 2</span><button class="link-btn" id="h-save-r">Save PNG</button></div>
+    <canvas id="cv-h-reg"></canvas>
+    <div class="legend" id="h-legend"></div></figure>
+  <div class="table-card">
+    <h3>This pair</h3>
+    <div class="scroll"><table class="tbl" id="h-pair-table"></table></div>
+    <p class="footnote" id="h-pair-note"></p>
+  </div>
+</section>
+
+<!-- LOCALIZATION RESULTS -->
+<section class="section dark results" id="l-results" hidden>
+  <h2>Localization.</h2>
+  <p class="lead small" id="l-sub"></p>
+  <div class="toolbar">
+    <div class="seg" id="l-seg-show">
+      <button data-v="inl" class="on">Inliers</button>
+      <button data-v="all">All matches</button>
+    </div>
+    <label class="range">Density <input type="range" id="l-density" min="5" max="100" value="100"></label>
+  </div>
+  <figure class="viz"><div class="viz-head"><span id="l-match-title">Query vs. best database image</span><button class="link-btn" id="l-save-m">Save PNG</button></div><canvas id="cv-l-match"></canvas></figure>
+  <figure class="viz"><div class="viz-head"><span>Where the query was localized</span>
+      <div class="seg mini" id="l-seg-map"><button data-v="zoom" class="on">Zoom</button><button data-v="all">Whole map</button></div></div>
+    <canvas id="cv-l-map" class="map"></canvas>
+    <div class="legend" id="l-legend"></div></figure>
+  <div class="table-card">
+    <h3>This query</h3>
+    <div class="scroll"><table class="tbl" id="l-table"></table></div>
+    <h3 style="margin-top:32px">Retrieved images that supported the pose</h3>
+    <div class="scroll"><table class="tbl" id="l-db-table"></table></div>
+    <p class="footnote">Aachen's ground-truth query poses are not public, so no pose error is shown here. The official percentages come from the benchmark server — see the Localization benchmark below.</p>
+  </div>
+</section>
+
+<!-- BENCHMARK -->
+<section class="section light" id="benchmark">
+  <h2 class="reveal">The numbers.</h2>
+  <div class="seg task reveal" id="bench-task-seg">
+    <button data-t="pose" class="on">Relative pose</button>
+    <button data-t="homography">Homography</button>
+    <button data-t="localization">Localization</button>
+  </div>
+  <div id="bench-pose">
+  <div class="seg ds" id="bench-ds-seg">
+    <button data-ds="megadepth" class="on">MegaDepth-1500</button>
+    <button data-ds="scannet">ScanNet-1500</button>
+  </div>
+  <div id="bench-md">
+  <p class="lead small reveal">Relative camera pose estimation on MegaDepth-1500, evaluated as in the paper:
+    1,500 pairs, AUC at 5°, 10° and 20°, poselib RANSAC.</p>
+
+  <div class="bench-ctl reveal">
+    <button class="btn primary" id="bench-run">Run benchmark</button>
+    <button class="btn ghost" id="bench-cancel" hidden>Stop</button>
+    <span class="bench-info" id="bench-info"></span>
+  </div>
+  <div class="bar" id="bench-bar" hidden><i></i></div>
+  <p class="err" id="bench-err" hidden></p>
+
+  <div class="table-card light-card reveal">
+    <h3>XFeat vs. paper</h3>
+    <div class="scroll"><table class="tbl" id="cmp-table"></table></div>
+    <p class="footnote" id="cmp-note">Run the benchmark to fill in this table.</p>
+  </div>
+
+  <details class="adv reveal">
+    <summary>Full Table 1 from the paper</summary>
+    <div class="scroll"><table class="tbl" id="paper-table"></table></div>
+    <p class="footnote">Paper FPS was measured on an Intel i5-1135G7 CPU at VGA; this machine will differ.</p>
+  </details>
+  </div>
+
+  <div id="bench-sn" hidden>
+    <p class="lead small">Relative pose on ScanNet-1500 (indoor), as in the paper's Table 2: 1,500 pairs at VGA resolution,
+      poselib RANSAC with the threshold swept from 0.5 to 6 px per method, AUC at 5°, 10° and 20°.</p>
+    <div class="bench-ctl">
+      <button class="btn primary" id="bs-run">Run benchmark</button>
+      <button class="btn ghost" id="bs-cancel" hidden>Stop</button>
+      <span class="bench-info" id="bs-info"></span>
+    </div>
+    <div class="bar" id="bs-bar" hidden><i></i></div>
+    <p class="err" id="bs-err" hidden></p>
+    <div class="table-card light-card">
+      <h3>XFeat and XFeat* vs. paper</h3>
+      <div class="scroll"><table class="tbl" id="bs-cmp-table"></table></div>
+      <p class="footnote" id="bs-cmp-note">Run the benchmark to fill in this table.</p>
+    </div>
+    <details class="adv">
+      <summary>Full Table 2 from the paper</summary>
+      <div class="scroll"><table class="tbl" id="bs-paper-table"></table></div>
+      <p class="footnote">The paper evaluates ScanNet-1500 at the default VGA resolution and reports AUC only.</p>
+    </details>
+  </div>
+  </div>
+
+  <div id="bench-loc" hidden>
+    <p class="lead small">Visual localization on Aachen Day-Night (v1.0, 4,328 database and 922 query images), as in the paper's Table 4:
+      HLoc with XFeat — 1024 px images, 4,096 keypoints, mutual nearest neighbours, a triangulated 3D map, NetVLAD top-50 retrieval and PnP + RANSAC.</p>
+    <div class="bench-ctl">
+      <button class="btn primary" id="la-run">Build map and localize</button>
+      <button class="btn ghost" id="la-cancel" hidden>Stop</button>
+      <span class="bench-info" id="la-info"></span>
+    </div>
+    <p class="err" id="la-err" hidden></p>
+    <div class="table-card light-card">
+      <h3>Pipeline</h3>
+      <ol class="stages" id="la-stages"></ol>
+      <p class="footnote">One-time job (about an hour on CPU). Every stage is saved to disk and a stopped run resumes where it left off.</p>
+    </div>
+
+    <div class="table-card light-card" id="la-summary-card" hidden>
+      <h3>Local summary</h3>
+      <div class="scroll"><table class="tbl" id="la-summary"></table></div>
+      <p class="footnote">"Localized" means PnP + RANSAC found a pose. Whether that pose is accurate can only be judged by the benchmark server.</p>
+    </div>
+
+    <div class="table-card light-card" id="la-submit-card" hidden>
+      <h3>Official numbers</h3>
+      <p class="lead small" style="margin:0 0 20px;text-align:left">Aachen's ground-truth poses are withheld, so the paper's percentages can only be obtained by submitting the poses file to <a class="alink" href="https://www.visuallocalization.net/" target="_blank" rel="noopener">visuallocalization.net</a>. Nothing is uploaded automatically — you do it yourself:</p>
+      <ol class="howto">
+        <li><b>Download</b> the poses file below. It holds one line per query — <code>name qw qx qy qz tx ty tz</code> — in the format HLoc writes for this benchmark.</li>
+        <li><b>Sign up</b> for a free account at <code>visuallocalization.net/signup</code> and log in.</li>
+        <li>Open the <b>Submission</b> page and choose the original <b>Aachen Day-Night</b> dataset (922 queries: 824 day + 98 night), <i>not</i> the v1.1 version (1,015 queries). Upload the file and name the method, e.g. "XFeat (HLoc)".</li>
+        <li>When it has been processed, find your entry in the <b>Aachen Day-Night</b> table on the site's Benchmark page. Day and Night each show three percentages for (0.25 m, 2°) / (0.5 m, 5°) / (5 m, 10°). <b>Enter them below</b>.</li>
+      </ol>
+      <p class="footnote" style="text-align:left;margin-top:0">The site's submission form is behind the login, so its exact field names may differ from the above.</p>
+      <div class="bench-ctl" style="justify-content:flex-start"><a class="btn primary" id="la-download" href="/api/aachen/submission" download>Download poses file</a></div>
+      <form id="la-form" class="resform">
+        <div class="resrow"><span>Day</span><input name="d0" type="number" step="0.1" min="0" max="100" placeholder="0.25 m, 2°"><input name="d1" type="number" step="0.1" min="0" max="100" placeholder="0.5 m, 5°"><input name="d2" type="number" step="0.1" min="0" max="100" placeholder="5 m, 10°"></div>
+        <div class="resrow"><span>Night</span><input name="n0" type="number" step="0.1" min="0" max="100" placeholder="0.25 m, 2°"><input name="n1" type="number" step="0.1" min="0" max="100" placeholder="0.5 m, 5°"><input name="n2" type="number" step="0.1" min="0" max="100" placeholder="5 m, 10°"></div>
+        <div class="bench-ctl" style="justify-content:flex-start;margin:12px 0 0"><button class="btn ghost" type="submit">Save results</button><button class="link-btn" type="button" id="la-clear" hidden>Clear</button></div>
+      </form>
+    </div>
+
+    <div class="table-card light-card">
+      <h3>XFeat vs. paper</h3>
+      <div class="scroll"><table class="tbl" id="la-cmp-table"></table></div>
+      <p class="footnote" id="la-cmp-note">Enter the benchmark server's results above to fill in this table.</p>
+    </div>
+    <details class="adv">
+      <summary>Full Table 4 from the paper</summary>
+      <div class="scroll"><table class="tbl" id="la-paper-table"></table></div>
+      <p class="footnote">Table 4 reports only XFeat (sparse), with images resized to a 1,024 px maximum and 4,096 keypoints.</p>
+    </details>
+  </div>
+
+  <div id="bench-hom" hidden>
+    <p class="lead small">Homography estimation on HPatches, as in the paper's Table 3: all 116 sequences (580 pairs),
+      MAGSAC++, mean corner error, MHA at 3, 5 and 7 px — XFeat only, as reported.</p>
+    <div class="bench-ctl">
+      <button class="btn primary" id="bh-run">Run benchmark</button>
+      <button class="btn ghost" id="bh-cancel" hidden>Stop</button>
+      <span class="bench-info" id="bh-info"></span>
+    </div>
+    <div class="bar" id="bh-bar" hidden><i></i></div>
+    <p class="err" id="bh-err" hidden></p>
+    <div class="table-card light-card">
+      <h3>XFeat vs. paper</h3>
+      <div class="scroll"><table class="tbl" id="bh-cmp-table"></table></div>
+      <p class="footnote" id="bh-cmp-note">Run the benchmark to fill in this table.</p>
+    </div>
+    <details class="adv">
+      <summary>Full Table 3 from the paper</summary>
+      <div class="scroll"><table class="tbl" id="bh-paper-table"></table></div>
+      <p class="footnote">The paper does not state the HPatches resize, keypoint count or MAGSAC++ threshold; this run uses a 480 px shorter side, 4096 keypoints and 3 px.</p>
+    </details>
+  </div>
+</section>
+
+<footer class="footer">
+  <p>XFeat: Accelerated Features for Lightweight Image Matching — Potje, Cadar, Araujo, Martins, Nascimento. CVPR 2024.</p>
+  <p>Independent demo UI, not affiliated with Apple.</p>
+</footer>
+
+<script src="/static/app.js"></script>
+<script src="/static/homography.js"></script>
+<script src="/static/scannet.js"></script>
+<script src="/static/aachen.js"></script>
+</body>
+</html>
