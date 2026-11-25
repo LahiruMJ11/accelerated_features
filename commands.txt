@@ -21,3 +21,7 @@ mv app/cache/aachen app/cache/aachen_previous
 Then submit the poses file (app/cache/aachen/Aachen_hloc_xfeat_netvlad50.txt) at visuallocalization.net, Once you have the percentages:
 
   python -m app.cli aachen --set-results D1 D2 D3 N1 N2 N3
+
+UI
+cd /Users/lahirujayaweera/projects/accelerated_features
+  /Users/lahirujayaweera/miniforge3/envs/myenv/bin/python -m uvicorn app.server:app --port 8000
