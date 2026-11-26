@@ -98,6 +98,7 @@ def intrinsics_to_camera(K):
         "params": [fx, fy, px, py],
     }
 
+## RANSAC
 def estimate_pose_poselib(kpts0, kpts1, K0, K1, thresh, conf=0.99999):
     M, info = poselib.estimate_relative_pose(
         kpts0, kpts1,

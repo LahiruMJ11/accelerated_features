@@ -71,7 +71,7 @@ def fine_loss(f1, f2, pts1, pts2, fine_module, ws=7):
 
     return error
 
-
+## distillation loss for keypoint head (teacher - ALIKE) Eq 6   - keypoint loss function
 def alike_distill_loss(kpts, img):
 
     C, H, W = kpts.shape

@@ -263,7 +263,7 @@ class XFeat(nn.Module):
 		return pos
 
 	@torch.inference_mode()
-	def batch_match(self, feats1, feats2, min_cossim = -1):
+	def batch_match(self, feats1, feats2, min_cossim = -1):    ## MNN
 		B = len(feats1)
 		cossim = torch.bmm(feats1, feats2.permute(0,2,1))
 		match12 = torch.argmax(cossim, dim=-1)
@@ -305,6 +305,7 @@ class XFeat(nn.Module):
 
 		return coords
 
+	## pixel offset by MLP
 	def refine_matches(self, d0, d1, matches, batch_idx, fine_conf = 0.25):
 		idx0, idx1 = matches[batch_idx]
 		feats1 = d0['descriptors'][batch_idx][idx0]
@@ -327,7 +328,7 @@ class XFeat(nn.Module):
 		return torch.cat([mkpts_0, mkpts_1], dim=-1)
 
 	@torch.inference_mode()
-	def match(self, feats1, feats2, min_cossim = 0.82):
+	def match(self, feats1, feats2, min_cossim = 0.82):   ## MNN
 
 		cossim = feats1 @ feats2.t()
 		cossim_t = feats2 @ feats1.t()
